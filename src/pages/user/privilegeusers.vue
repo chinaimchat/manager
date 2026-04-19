@@ -54,6 +54,20 @@
           />
         </div>
 
+        <div class="flex items-center justify-between mt-12px">
+          <div class="flex items-center">
+            <span class="font-500 mr-8px">显示对方分端在线信息</span>
+            <span class="text-gray-400 text-12px">
+              关闭后，全平台客户端不再展示对方「Web/手机/PC 等」在线来源，仅保留是否在线；接口对非本人返回的 device_flag 为占位值
+            </span>
+          </div>
+          <el-switch
+            v-model="global.showDeviceOnlineOn"
+            :loading="globalSaving"
+            @change="onToggleShowDeviceOnline"
+          />
+        </div>
+
       </div>
     </div>
 
@@ -229,7 +243,8 @@ const global = reactive({
   privilegeOnlyAddFriendOn: false,
   friendApplyAutoAcceptOn: false,
   privilegeOnlyCreateInviteGroupOn: false,
-  showLastOfflineOn: true
+  showLastOfflineOn: true,
+  showDeviceOnlineOn: true
 });
 const globalSaving = ref(false);
 
@@ -273,11 +288,13 @@ async function fetchGlobal() {
     global.privilegeOnlyCreateInviteGroupOn =
       Number(source?.privilege_only_create_invite_group_on ?? source?.privilegeOnlyCreateInviteGroupOn ?? 0) === 1;
     global.showLastOfflineOn = Number(source?.show_last_offline_on ?? source?.showLastOfflineOn ?? 1) === 1;
+    global.showDeviceOnlineOn = Number(source?.show_device_online_on ?? source?.showDeviceOnlineOn ?? 1) === 1;
   } catch {
     global.privilegeOnlyAddFriendOn = false;
     global.friendApplyAutoAcceptOn = false;
     global.privilegeOnlyCreateInviteGroupOn = false;
     global.showLastOfflineOn = true;
+    global.showDeviceOnlineOn = true;
   }
 }
 
@@ -411,6 +428,19 @@ async function onToggleShowLastOffline(v: boolean) {
     ElMessage.success(v ? '已开启：全平台可显示对方上次在线时间' : '已关闭：全平台隐藏对方上次在线时间');
   } catch (e: any) {
     global.showLastOfflineOn = !v;
+    ElMessage.error(e?.msg || '更新失败');
+  } finally {
+    globalSaving.value = false;
+  }
+}
+
+async function onToggleShowDeviceOnline(v: boolean) {
+  globalSaving.value = true;
+  try {
+    await privilegeGlobalPut({ show_device_online_on: v ? 1 : 0 });
+    ElMessage.success(v ? '已开启：全平台可显示对方分端在线信息' : '已关闭：全平台隐藏对方分端在线信息');
+  } catch (e: any) {
+    global.showDeviceOnlineOn = !v;
     ElMessage.error(e?.msg || '更新失败');
   } finally {
     globalSaving.value = false;
