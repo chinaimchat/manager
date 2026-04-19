@@ -1,0 +1,2 @@
+window.TSDD_CONFIG = window.TSDD_CONFIG || {};
+window.TSDD_CONFIG.CLIENT_WEB_URL = "${CLIENT_WEB_URL}";
