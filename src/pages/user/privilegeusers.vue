@@ -409,7 +409,7 @@ async function onTogglePrivilegeOnlyCreateInviteGroup(v: boolean) {
     const appconfigRes: any = await getAppconfigGet();
     const payload = {
       ...(pickObject(appconfigRes) || appconfigRes || {}),
-      register_invite_on: v ? 1 : 0
+      invite_code_system_on: v ? 1 : 0
     };
     await updateAppconfigPost(payload);
     ElMessage.success(v ? '已开启：邀请码总开关（特权）' : '已关闭：邀请码总开关（特权）');

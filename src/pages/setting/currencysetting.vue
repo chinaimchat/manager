@@ -96,7 +96,7 @@ const formData = reactive({
   new_user_join_system_group: 1,
   search_by_phone: 1,
   send_welcome_message_on: 1,
-  register_invite_on: 1,
+  invite_code_system_on: 1,
   invite_system_account_join_group_on: 1,
   register_user_must_complete_info_on: 0,
   privilege_only_add_friend_on: 0,
@@ -111,7 +111,7 @@ const initData = () => {
     formData.new_user_join_system_group = res.new_user_join_system_group;
     formData.search_by_phone = res.search_by_phone;
     formData.send_welcome_message_on = res.send_welcome_message_on;
-    formData.register_invite_on = res.register_invite_on;
+    formData.invite_code_system_on = res.invite_code_system_on;
     formData.invite_system_account_join_group_on = res.invite_system_account_join_group_on;
     formData.register_user_must_complete_info_on = res.register_user_must_complete_info_on;
     formData.privilege_only_add_friend_on = Number(res.privilege_only_add_friend_on ?? 0);
