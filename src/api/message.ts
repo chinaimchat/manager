@@ -4,6 +4,13 @@ export function messageSendPost(data: any) {
   return request({ url: '/manager/message/send', method: 'post', data });
 }
 
+export function messageImageUploadPost(file: File) {
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('contenttype', file.type || 'image/png');
+  return request({ url: '/manager/upload/image', method: 'post', data: fd });
+}
+
 export function messageSendAllPost(data: any) {
   return request({ url: '/manager/message/sendall', method: 'post', data });
 }

@@ -72,13 +72,23 @@
     </div>
 
     <div class="flex-1 el-card border-none flex-col box-border overflow-hidden">
-      <div class="h-50px pl-12px pr-12px box-border flex items-center justify-between bd-title">
-        <div class="bd-title-left">
-          <p class="m-0 font-600">特权用户管理</p>
+      <div class="h-50px pl-12px pr-12px box-border flex items-center justify-between bd-title gap-12px">
+        <div class="flex items-center gap-12px min-w-0 flex-1">
+          <p class="m-0 font-600 flex-shrink-0">特权用户管理</p>
+          <el-input
+            v-model="listKeyword"
+            class="w-380px max-w-full min-w-0"
+            placeholder="搜索 UID、昵称、用户名、手机号"
+            clearable
+            @keyup.enter="onListSearch"
+            @clear="onListSearch"
+          >
+            <template #prefix>
+              <el-icon><Search /></el-icon>
+            </template>
+          </el-input>
         </div>
-        <div class="flex items-center h-50px">
-          <el-button type="primary" @click="openAdd">添加特权用户</el-button>
-        </div>
+        <el-button type="primary" class="flex-shrink-0" @click="openAdd">添加特权用户</el-button>
       </div>
 
       <div class="flex-1 overflow-hidden p-12px">
@@ -208,6 +218,7 @@ meta:
 <script setup lang="ts">
 import { reactive, ref } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
+import { Search } from '@element-plus/icons-vue';
 import {
   privilegeGlobalGet,
   privilegeGlobalPut,
@@ -238,6 +249,7 @@ const loading = ref(false);
 const list = ref<Row[]>([]);
 const total = ref(0);
 const query = reactive({ page_size: 15, page: 1 });
+const listKeyword = ref('');
 
 const global = reactive({
   privilegeOnlyAddFriendOn: false,
@@ -268,7 +280,7 @@ async function fetchList() {
     const res: any = await privilegeUserListGet({
       page: query.page,
       page_size: query.page_size,
-      keyword: ''
+      keyword: listKeyword.value.trim()
     });
     list.value = pickArray(res);
     total.value = pickTotal(res);
@@ -296,6 +308,11 @@ async function fetchGlobal() {
     global.showLastOfflineOn = true;
     global.showDeviceOnlineOn = true;
   }
+}
+
+function onListSearch() {
+  query.page = 1;
+  fetchList();
 }
 
 function openAdd() {

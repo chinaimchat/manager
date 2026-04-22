@@ -23,14 +23,13 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { storeToRefs } from 'pinia';
-import { useDebounceFn } from '@vueuse/core';
 import { useGlobalStore } from '@/stores/modules/global';
 import { useKeepAliveStore } from '@/stores/modules/keepAlive';
 import Tabs from '@/layouts/components/Tabs.vue';
 import Footer from '@/layouts/components/Footer.vue';
 
 const globalStore = useGlobalStore();
-const { maximize, isCollapse, layout, tabs, footer } = storeToRefs(globalStore);
+const { maximize, layout, tabs, footer } = storeToRefs(globalStore);
 
 const keepAliveStore = useKeepAliveStore();
 const { keepAliveName } = storeToRefs(keepAliveStore);
@@ -75,18 +74,6 @@ watch(
   },
   { immediate: true }
 );
-
-// 监听窗口大小变化，折叠侧边栏
-const screenWidth = ref(0);
-const listeningWindow = useDebounceFn(() => {
-  screenWidth.value = document.body.clientWidth;
-  if (!isCollapse.value && screenWidth.value < 1200) globalStore.setGlobalState('isCollapse', true);
-  if (isCollapse.value && screenWidth.value > 1200) globalStore.setGlobalState('isCollapse', false);
-}, 100);
-window.addEventListener('resize', listeningWindow, false);
-onBeforeUnmount(() => {
-  window.removeEventListener('resize', listeningWindow);
-});
 
 const onExitMaximizeClick = () => {
   globalStore.setGlobalState('maximize', false);

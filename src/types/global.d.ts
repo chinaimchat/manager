@@ -98,7 +98,7 @@ interface Window {
   TSDD_CONFIG: {
     APP_TITLE: string;
     APP_URL: string;
-    /** 用户端 Web 根地址，用于「以此用户视角查看」新开页写入登录态，如 https://im.example.com */
+    /** 用户端 Web 根地址（可选，用于外链等） */
     CLIENT_WEB_URL?: string;
   };
 }

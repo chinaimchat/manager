@@ -65,13 +65,14 @@ meta:
 </route>
 
 <script lang="tsx" setup>
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { ElButton, ElSpace, ElAvatar, ElDropdown, ElDropdownMenu, ElDropdownItem, ElMessage, ElMessageBox } from 'element-plus';
 import { BU_DOU_CONFIG } from '@/config';
 // API 接口
 import { groupListGet, groupForbiddenPut, groupLiftbanPut } from '@/api/group';
 
 const router = useRouter();
+const route = useRoute();
 /**
  * 表格
  */
@@ -336,8 +337,12 @@ const onLiftban = (item: any) => {
       });
     });
 };
-// 初始化
+// 初始化（支持从其它页带 keyword 跳转）
 onMounted(() => {
+  const kw = route.query.keyword;
+  if (typeof kw === 'string' && kw.trim()) {
+    queryFrom.keyword = kw.trim();
+  }
   getTableList();
 });
 </script>

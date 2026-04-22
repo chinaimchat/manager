@@ -21,17 +21,15 @@
         </div>
       </el-scrollbar>
     </div>
-    <el-aside :class="{ 'not-aside': !subMenuList.length }" :style="{ width: isCollapse ? '65px' : '210px' }">
+    <el-aside :class="{ 'not-aside': !subMenuList.length }" :style="{ width: '210px' }">
       <div class="logo flex-center">
-        <span class="logo-text">
-          {{ isCollapse ? APP_TITLE_SHORT : APP_TITLE }}
-        </span>
+        <span class="logo-text">{{ APP_TITLE }}</span>
       </div>
       <el-scrollbar>
         <el-menu
           :default-active="activeMenu"
           :router="false"
-          :collapse="isCollapse"
+          :collapse="false"
           :collapse-transition="false"
           :unique-opened="true"
         >
@@ -51,7 +49,6 @@
 <script setup lang="ts" name="layoutColumns">
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/modules/auth';
-import { useGlobalStore } from '@/stores/modules/global';
 import { BU_DOU_CONFIG } from '@/config';
 // 组件
 import Main from '@/layouts/components/Main.vue';
@@ -62,13 +59,10 @@ import ToolBarRight from '@/layouts/components/Header/ToolBarRight.vue';
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
-const globalStore = useGlobalStore();
 
-const isCollapse = computed(() => globalStore.isCollapse);
 const menuList = computed(() => authStore.showMenuListGet);
 const activeMenu = computed(() => (route.meta.activeMenu ? route.meta.activeMenu : route.path) as string);
 const APP_TITLE = BU_DOU_CONFIG.APP_TITLE;
-const APP_TITLE_SHORT = BU_DOU_CONFIG.APP_TITLE_SHORT;
 
 const subMenuList = ref<Menu.MenuOptions[]>([]);
 const splitActive = ref('');

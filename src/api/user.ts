@@ -62,15 +62,6 @@ export function userResetPasswordPost(data: { uid: string; new_password: string;
   });
 }
 
-// 以此用户视角查看：获取目标用户 Web 登录态（仅超级管理员）
-export function userImpersonatePost(data: { uid: string }) {
-  return request({
-    url: '/manager/user/impersonate',
-    method: 'post',
-    data
-  });
-}
-
 // 特权用户-列表
 export function privilegeUserListGet(params: any) {
   return request({

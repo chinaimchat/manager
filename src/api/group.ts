@@ -9,6 +9,15 @@ export function groupListGet(params: any) {
   });
 }
 
+/** 某用户所在群（与群列表里「聊天记录」同一数据源，供预览侧栏） */
+export function groupMemberGroupsGet(params: { uid: string }) {
+  return request({
+    url: '/manager/group/member_groups',
+    method: 'get',
+    params
+  });
+}
+
 // 封禁群列表
 export function groupDisablelistGet(params: any) {
   return request({

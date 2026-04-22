@@ -58,6 +58,19 @@
     <bd-send-msg v-model:value="sendValue" v-bind="sendInfo" />
     <!-- 查看设备 -->
     <Devices v-model:value="devicesValue" :uid="devicesUid" />
+    <!-- 以此用户视角查看：弹窗内仿 Web IM，管理端接口只读 -->
+    <el-dialog
+      v-model="viewAsImVisible"
+      :title="viewAsImTitle"
+      width="92%"
+      top="2vh"
+      append-to-body
+      destroy-on-close
+      class="user-im-preview-dialog"
+      @closed="onViewAsImClosed"
+    >
+      <UserImPreviewPanel v-if="viewAsImUid" :key="viewAsImUid" :uid="viewAsImUid" :name="viewAsImName" />
+    </el-dialog>
     <el-dialog
       v-model="resetPwdVisible"
       title="重置用户密码"
@@ -87,25 +100,6 @@
         <el-button type="primary" :loading="resetPwdLoading" @click="submitResetPwd">确定</el-button>
       </template>
     </el-dialog>
-    <!-- 以此用户视角查看：内嵌用户端 Web -->
-    <el-dialog
-      v-model="viewAsVisible"
-      :title="viewAsDialogTitle"
-      width="80%"
-      top="2vh"
-      append-to-body
-      destroy-on-close
-      class="view-as-user-dialog"
-      @closed="onViewAsClosed"
-    >
-      <iframe
-        v-if="viewAsIframeSrc"
-        :key="viewAsIframeSrc"
-        class="view-as-iframe"
-        :src="viewAsIframeSrc"
-        title="用户端预览"
-      />
-    </el-dialog>
   </bd-page>
 </template>
 
@@ -116,7 +110,8 @@ meta:
 </route>
 
 <script lang="tsx" setup>
-import { useRouter } from 'vue-router';
+import { computed, reactive, ref, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import {
   ElButton,
   ElSpace,
@@ -128,19 +123,17 @@ import {
   ElMessageBox
 } from 'element-plus';
 import Devices from '@/pages/message/components/Devices.vue';
+import UserImPreviewPanel from '@/components/UserImPreviewPanel.vue';
 import { useUserStore } from '@/stores/modules/user';
 import { BU_DOU_CONFIG } from '@/config';
 // API 接口
-import { userListGet, userLiftbanPut, userResetPasswordPost, userImpersonatePost } from '@/api/user';
+import { userListGet, userLiftbanPut, userResetPasswordPost } from '@/api/user';
 
 const router = useRouter();
+const route = useRoute();
 const userStore = useUserStore();
 
 const isSuperAdmin = () => userStore.userInfo.role === 'superAdmin';
-
-function utf8ToB64(s: string) {
-  return btoa(unescape(encodeURIComponent(s)));
-}
 /**
  * 表格
  */
@@ -251,10 +244,12 @@ const column = reactive<Column.ColumnOptions[]>([
               dropdown: () => {
                 return (
                   <ElDropdownMenu>
-                    <ElDropdownItem onClick={() => onFriends(scope.row)}>
-                      <i-bd-every-user class={'mr-4px'} />
-                      好友与聊天记录
-                    </ElDropdownItem>
+                    {isSuperAdmin() ? (
+                      <ElDropdownItem onClick={() => onUserImPreview(scope.row)}>
+                        <i-bd-user-to-user-transmission class={'mr-4px'} />
+                        以此用户视角查看
+                      </ElDropdownItem>
+                    ) : null}
                     <ElDropdownItem onClick={() => onUseBlackList(scope.row)}>
                       <i-bd-personal-privacy class={'mr-4px'} />
                       黑名单列表
@@ -271,12 +266,6 @@ const column = reactive<Column.ColumnOptions[]>([
                       <ElDropdownItem divided onClick={() => onResetPwdOpen(scope.row)}>
                         <i-bd-lock class={'mr-4px'} />
                         重置密码
-                      </ElDropdownItem>
-                    ) : null}
-                    {isSuperAdmin() ? (
-                      <ElDropdownItem onClick={() => onViewAsUser(scope.row)}>
-                        <i-bd-user-to-user-transmission class={'mr-4px'} />
-                        以此用户视角查看
                       </ElDropdownItem>
                     ) : null}
                   </ElDropdownMenu>
@@ -342,15 +331,23 @@ const onSand = (item: any) => {
   };
 };
 
-// 好友列表
-const onFriends = (item: any) => {
-  router.push({
-    path: '/user/friends',
-    query: {
-      uid: item.uid,
-      name: item.name
-    }
-  });
+const viewAsImVisible = ref(false);
+const viewAsImUid = ref('');
+const viewAsImName = ref('');
+const viewAsImTitle = computed(() => {
+  const n = viewAsImName.value || viewAsImUid.value;
+  return `以此用户视角查看 · ${n}`;
+});
+
+const onUserImPreview = (item: any) => {
+  viewAsImUid.value = item.uid || '';
+  viewAsImName.value = item.name || '';
+  viewAsImVisible.value = true;
+};
+
+const onViewAsImClosed = () => {
+  viewAsImUid.value = '';
+  viewAsImName.value = '';
 };
 
 // 黑名单列表
@@ -456,47 +453,12 @@ const submitResetPwd = () => {
     });
 };
 
-// 以此用户视角查看（弹窗内嵌 iframe，超级管理员）
-const viewAsVisible = ref(false);
-const viewAsDialogTitle = ref('');
-const viewAsIframeSrc = ref('');
-
-const onViewAsClosed = () => {
-  viewAsIframeSrc.value = '';
-  viewAsDialogTitle.value = '';
-};
-
-const onViewAsUser = async (row: any) => {
-  const clientBase = String((BU_DOU_CONFIG as any).CLIENT_WEB_URL || '').trim();
-  if (!clientBase) {
-    ElMessage.warning('请先在配置中设置 CLIENT_WEB_URL（用户端 Web 根地址），或在 window.TSDD_CONFIG 中注入');
-    return;
-  }
-  try {
-    const r: any = await userImpersonatePost({ uid: row.uid });
-    const payload = {
-      uid: r.uid,
-      token: r.token,
-      name: r.name || '',
-      short_no: r.short_no || '',
-      app_id: r.app_id || '',
-      role: '',
-      sex: typeof r.sex === 'number' ? r.sex : 0,
-      is_work: false
-    };
-    const frag = 'mgr=' + utf8ToB64(JSON.stringify(payload));
-    const base = clientBase.replace(/\/$/, '');
-    const sep = base.includes('#') ? '&' : '#';
-    viewAsDialogTitle.value = `用户端预览 · ${row.name || row.uid}`;
-    viewAsIframeSrc.value = `${base}${sep}${frag}`;
-    viewAsVisible.value = true;
-  } catch (err: any) {
-    if (err?.msg) ElMessage.error(err.msg);
-  }
-};
-
-// 初始化
+// 初始化（支持从其它页带 keyword 跳转，如 IM 预览「用户列表中查找」）
 onMounted(() => {
+  const kw = route.query.keyword;
+  if (typeof kw === 'string' && kw.trim()) {
+    queryFrom.keyword = kw.trim();
+  }
   getUserList();
 });
 </script>
@@ -509,16 +471,13 @@ onMounted(() => {
 </style>
 
 <style lang="scss">
-/* 弹窗内嵌用户端：占满对话框主体区域 */
-.view-as-user-dialog .el-dialog__body {
+.user-im-preview-dialog .el-dialog__body {
   padding: 0;
-  height: calc(100vh - 140px);
+  height: calc(100vh - 120px);
   box-sizing: border-box;
 }
-.view-as-iframe {
-  display: block;
-  width: 100%;
-  height: 100%;
-  border: 0;
+.user-im-preview-dialog .el-dialog__header {
+  margin-right: 0;
+  padding-bottom: 12px;
 }
 </style>
