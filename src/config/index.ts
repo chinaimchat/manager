@@ -26,6 +26,8 @@ export const BU_DOU_CONFIG = {
   APP_TITLE_SHORT: 'AI抖商学院',
   /** 用户端 Web 地址，留空则「以此用户视角查看」仅提示需在 window.TSDD_CONFIG 或 env 模块中配置 */
   CLIENT_WEB_URL: '',
+  /** 多域名列表：用于「试错重试域名」与「302 切换」时的候选域名池 */
+  APP_URLS: [] as string[],
   ...modules[process.env.APP_ENV as any],
   ...TSDD_CONFIG
   // APP_URL: '/api/v1/' // 正式环境地址 (通用打包镜像，用此相对地址)

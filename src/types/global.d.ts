@@ -100,6 +100,8 @@ interface Window {
     APP_URL: string;
     /** 用户端 Web 根地址（可选，用于外链等） */
     CLIENT_WEB_URL?: string;
+    /** 多域名候选列表（可选，用于前端「试错重试域名」） */
+    APP_URLS?: string[];
   };
 }
 
