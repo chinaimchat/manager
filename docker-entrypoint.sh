@@ -4,7 +4,13 @@ set -eu
 
 : "${MANAGER_SERVER_NAME:=localhost}"
 export MANAGER_SERVER_NAME
-envsubst '${API_URL} ${MANAGER_SERVER_NAME}' < /nginx.conf.template > /etc/nginx/conf.d/default.conf
+
+: "${API_URL:=http://server:8090/}"
+NGINX_API_UPSTREAM=$(printf '%s\n' "$API_URL" | sed -e 's|^[Hh][Tt][Tt][Pp][Ss]*://||' -e 's|/.*$||')
+[ -z "$NGINX_API_UPSTREAM" ] && NGINX_API_UPSTREAM='server:8090'
+export NGINX_API_UPSTREAM
+
+envsubst '${MANAGER_SERVER_NAME} ${NGINX_API_UPSTREAM}' < /nginx.conf.template > /etc/nginx/conf.d/default.conf
 
 # 运行时注入「用户端 Web 根地址」，供管理后台「以此用户视角查看」等读取 window.TSDD_CONFIG.CLIENT_WEB_URL
 HTML_DIR=/usr/share/nginx/html
